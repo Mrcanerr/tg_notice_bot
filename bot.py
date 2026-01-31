@@ -16,7 +16,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # ====== Настройки ======
 TOKEN = "8090223138:AAHn1CfZz9ZEunoJ5GLK905DWitKbgm5rv0"
-CHAT_ID = -1003887800683  # ID группы
+CHAT_ID = -4835586184  # ID группы
 TEXT = "Здравствуйте, коллеги, напоминаю, что сегодня по расписанию пересчет!"
 
 logging.basicConfig(level=logging.INFO)
@@ -89,8 +89,26 @@ async def test_command(message: Message):
 
 # ====== Планировщик ======
 def setup_jobs():
-    scheduler.add_job(send_notice, "cron", hour=4, minute=0, args=["Ночная смена"])
-    scheduler.add_job(send_notice, "cron", hour=12, minute=55, args=["Дневная смена"])
+    # Уведомление в 04:00 каждые 2 дня
+    scheduler.add_job(
+        send_notice,
+        "cron",
+        day="*/2",
+        hour=4,
+        minute=0,
+        args=["Ночная смена"]
+    )
+
+    # Уведомление в 10:00 каждые 2 дня
+    scheduler.add_job(
+        send_notice,
+        "cron",
+        day="*/2",
+        hour=10,
+        minute=0,
+        args=["Дневная смена"]
+    )
+
     scheduler.start()
 
 
