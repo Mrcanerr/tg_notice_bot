@@ -74,7 +74,7 @@ async def read_callback(call: CallbackQuery):
 
 # ---------- КОМАНДА /test ----------
 @dp.message(Command("test"))
-async def test_command(message):
+async def test_command(message: Message):
     await send_notice("ТЕСТОВАЯ СМЕНА")
 
 # ---------- ЗАПУСК ----------
