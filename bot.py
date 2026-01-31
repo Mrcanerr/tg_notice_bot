@@ -3,82 +3,82 @@ import logging
 from zoneinfo import ZoneInfo
 
 from aiogram import Bot, Dispatcher, F
-from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from aiogram.filters import Command
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from aiogram.types import (
+    Message,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CallbackQuery
+)
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# ============= НАСТРОЙКИ =============
 TOKEN = "8090223138:AAHn1CfZz9ZEunoJ5GLK905DWitKbgm5rv0"
-CHAT_ID = -1003887800683  # ID вашей группы
+CHAT_ID = -1003887800683  # ID группы
 
-NOTICE_TEXT = (
-    "Здравствуйте, коллеги, напоминаю, что сегодня по расписанию пересчет!"
-)
+TEXT = "Здравствуйте, коллеги, напоминаю, что сегодня по расписанию пересчет!"
 
-# Настройка логов
 logging.basicConfig(level=logging.INFO)
 
-# Инициализация бота
 bot = Bot(
     TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 dp = Dispatcher()
 
-# Планировщик
 scheduler = AsyncIOScheduler(timezone=ZoneInfo("Europe/Moscow"))
+read_users = {}
 
-read_users = {}  # message_id -> set(user_id)
-
-def build_keyboard():
+def keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="✅ Уведомление было прочитано", callback_data="ack")]
+            [InlineKeyboardButton(
+                text="✅ Уведомление было прочитано",
+                callback_data="read"
+            )]
         ]
     )
 
 def build_text(msg_id: int):
-    text = NOTICE_TEXT + "\n\n<b>Прочитали:</b>\n"
+    text = f"<b>{TEXT}</b>\n\n<b>Прочитали:</b>\n"
     for uid in read_users.get(msg_id, set()):
         text += f"• <code>{uid}</code>\n"
     return text
 
 async def send_notice(label: str):
-    message = await bot.send_message(
-        chat_id=CHAT_ID,
-        text=f"<b>{NOTICE_TEXT}</b>\n\n<i>{label}</i>",
-        reply_markup=build_keyboard()
+    msg = await bot.send_message(
+        CHAT_ID,
+        f"<b>{TEXT}</b>\n\n<i>{label}</i>",
+        reply_markup=keyboard()
     )
-    read_users[message.message_id] = set()
+    read_users[msg.message_id] = set()
 
-@dp.callback_query(F.data == "ack")
-async def handle_ack(call: CallbackQuery):
-    msg_id = call.message.message_id
-    user_id = call.from_user.id
+@dp.callback_query(F.data == "read")
+async def mark_read(call: CallbackQuery):
+    mid = call.message.message_id
+    uid = call.from_user.id
 
-    read_users.setdefault(msg_id, set()).add(user_id)
+    read_users.setdefault(mid, set()).add(uid)
 
     await call.message.edit_text(
-        build_text(msg_id),
-        reply_markup=build_keyboard()
+        build_text(mid),
+        reply_markup=keyboard()
     )
-
-    await call.answer("Отмечено 👌")
+    await call.answer("Отмечено 👍")
 
 @dp.message(Command("test"))
-async def cmd_test(message: Message):
-    await send_notice("🧪 ТЕСТОВОЕ УВЕДОМЛЕНИЕ")
+async def test_command(message: Message):
+    await send_notice("🧪 ТЕСТ")
 
-def setup_scheduler():
-    scheduler.add_job(send_notice, "cron", hour=4, minute=0, args=["🌙 Ночная (04:00)"])
-    scheduler.add_job(send_notice, "cron", hour=10, minute=0, args=["☀️ Дневная (10:00)"])
+def setup_jobs():
+    scheduler.add_job(send_notice, "cron", hour=4, minute=0, args=["🌙 Ночная смена"])
+    scheduler.add_job(send_notice, "cron", hour=10, minute=0, args=["☀️ Дневная смена"])
     scheduler.start()
 
 async def main():
-    setup_scheduler()
+    setup_jobs()
     await dp.start_polling(bot)
 
-if name == "main":
+if __name__ == "__main__":
     asyncio.run(main())
