@@ -17,8 +17,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # ================= НАСТРОЙКИ =================
 
-TOKEN = "ВСТАВЬ_СЮДА_ТОКЕН_БОТА"
-CHAT_ID = -1001234567890  # ID группы / супергруппы
+TOKEN = "8090223138:AAHn1CfZz9ZEunoJ5GLK905DWitKbgm5rv0"
+CHAT_ID = -1003887800683  # ID группы / супергруппы
 
 TEXT = "Здравствуйте, коллеги, напоминаю, что сегодня по расписанию пересчёт!"
 
