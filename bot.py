@@ -89,8 +89,8 @@ async def test_command(message: Message):
 
 # ====== Планировщик ======
 def setup_jobs():
-    scheduler.add_job(send_notice, "cron", hour=4, minute=0, args=["🌙 Ночная смена"])
-    scheduler.add_job(send_notice, "cron", hour=10, minute=0, args=["☀️ Дневная смена"])
+    scheduler.add_job(send_notice, "cron", hour=4, minute=0, args=["Ночная смена"])
+    scheduler.add_job(send_notice, "cron", hour=12, minute=55, args=["Дневная смена"])
     scheduler.start()
 
 
