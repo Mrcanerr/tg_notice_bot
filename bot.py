@@ -66,7 +66,7 @@ async def main():
     scheduler = AsyncIOScheduler(timezone=timezone("Europe/Moscow"))
 
     scheduler.add_job(send_notice, "cron", hour=4, minute=0, args=["Ночная (04:00)"])
-    scheduler.add_job(send_notice, "cron", hour=10, minute=0, args=["Дневная (10:00)"])
+    scheduler.add_job(send_notice, "cron", hour=10, minute=0, args=["Дневная (11:27)"])
 
     scheduler.start()
     await dp.start_polling(bot)
