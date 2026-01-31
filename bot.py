@@ -72,7 +72,14 @@ async def mark_read(call: CallbackQuery):
     mid = call.message.message_id
     uid = call.from_user.id
 
-    read_users.setdefault(mid, set()).add(uid)
+    users = read_users.setdefault(mid, set())
+
+    # ❗️ Если пользователь уже отмечался — ничего не меняем
+    if uid in users:
+        await call.answer("Вы уже отметились 👍", show_alert=False)
+        return
+
+    users.add(uid)
 
     await call.message.edit_text(
         await build_text(mid),
