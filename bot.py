@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 
 # ================= НАСТРОЙКИ =================
 TOKEN = os.getenv("BOT_TOKEN") or "8090223138:AAHn1CfZz9ZEunoJ5GLK905DWitKbgm5rv0"
-CHAT_ID = -5221691294  # ID группы
+CHAT_ID = -1003887800683  # ID группы
 # ============================================
 
 bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
