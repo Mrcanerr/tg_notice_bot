@@ -10,8 +10,8 @@ from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, C
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # ============= НАСТРОЙКИ =============
-TOKEN = "ВАШ_BOT_TOKEN"
-CHAT_ID = -1001234567890  # ID вашей группы
+TOKEN = "8090223138:AAHn1CfZz9ZEunoJ5GLK905DWitKbgm5rv0"
+CHAT_ID = -1003887800683  # ID вашей группы
 
 NOTICE_TEXT = (
     "Здравствуйте, коллеги, напоминаю, что сегодня по расписанию пересчет!"
