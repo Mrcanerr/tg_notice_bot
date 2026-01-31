@@ -14,9 +14,9 @@ from aiogram.types import (
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+# ====== Настройки ======
 TOKEN = "8090223138:AAHn1CfZz9ZEunoJ5GLK905DWitKbgm5rv0"
 CHAT_ID = -1003887800683  # ID группы
-
 TEXT = "Здравствуйте, коллеги, напоминаю, что сегодня по расписанию пересчет!"
 
 logging.basicConfig(level=logging.INFO)
@@ -28,8 +28,10 @@ bot = Bot(
 dp = Dispatcher()
 
 scheduler = AsyncIOScheduler(timezone=ZoneInfo("Europe/Moscow"))
-read_users = {}
+read_users = {}  # {message_id: set(user_id)}
 
+
+# ====== Клавиатура ======
 def keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -40,12 +42,21 @@ def keyboard():
         ]
     )
 
-def build_text(msg_id: int):
+
+# ====== Формируем текст уведомления ======
+async def build_text(msg_id: int):
     text = f"<b>{TEXT}</b>\n\n<b>Прочитали:</b>\n"
     for uid in read_users.get(msg_id, set()):
-        text += f"• <code>{uid}</code>\n"
+        try:
+            user = await bot.get_chat(uid)
+            display = f"@{user.username}" if user.username else user.full_name
+        except Exception:
+            display = f"<code>{uid}</code>"
+        text += f"• {display}\n"
     return text
 
+
+# ====== Отправка уведомления ======
 async def send_notice(label: str):
     msg = await bot.send_message(
         CHAT_ID,
@@ -54,6 +65,8 @@ async def send_notice(label: str):
     )
     read_users[msg.message_id] = set()
 
+
+# ====== Обработка нажатия кнопки ======
 @dp.callback_query(F.data == "read")
 async def mark_read(call: CallbackQuery):
     mid = call.message.message_id
@@ -62,23 +75,30 @@ async def mark_read(call: CallbackQuery):
     read_users.setdefault(mid, set()).add(uid)
 
     await call.message.edit_text(
-        build_text(mid),
+        await build_text(mid),
         reply_markup=keyboard()
     )
     await call.answer("Отмечено 👍")
 
+
+# ====== Команда для теста ======
 @dp.message(Command("test"))
 async def test_command(message: Message):
     await send_notice("🧪 ТЕСТ")
 
+
+# ====== Планировщик ======
 def setup_jobs():
     scheduler.add_job(send_notice, "cron", hour=4, minute=0, args=["🌙 Ночная смена"])
     scheduler.add_job(send_notice, "cron", hour=10, minute=0, args=["☀️ Дневная смена"])
     scheduler.start()
 
+
+# ====== Запуск бота ======
 async def main():
     setup_jobs()
     await dp.start_polling(bot)
 
-if __name__ == "__main__":
+
+if name == "main":
     asyncio.run(main())
