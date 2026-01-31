@@ -1,29 +1,37 @@
 import asyncio
+import os
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from aiogram.enums import ParseMode
+from aiogram.filters import Command
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pytz import timezone
+from zoneinfo import ZoneInfo
 
-TOKEN = "YOUR_BOT_TOKEN"
-CHAT_ID = -1001234567890  # ID группы
+# ================= НАСТРОЙКИ =================
+TOKEN = os.getenv("BOT_TOKEN") or "8090223138:AAHn1CfZz9ZEunoJ5GLK905DWitKbgm5rv0"
+CHAT_ID = -5221691294  # ID группы
+# ============================================
 
 bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher()
 
-read_users = {}  # user_id: username
+read_users = {}
 current_shift = ""
 
+# ---------- КНОПКА ----------
 def keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(
-                text="✅ Уведомление было прочитано",
-                callback_data="read"
-            )]
+            [
+                InlineKeyboardButton(
+                    text="✅ Уведомление было прочитано",
+                    callback_data="read_notice"
+                )
+            ]
         ]
     )
 
+# ---------- ТЕКСТ СООБЩЕНИЯ ----------
 def build_text():
     text = (
         "Здравствуйте, коллеги, напоминаю, что сегодня по расписанию пересчет!\n\n"
@@ -32,13 +40,14 @@ def build_text():
 
     if read_users:
         text += "\n<b>Прочитали:</b>\n"
-        for uid, uname in read_users.items():
-            name = f"@{uname}" if uname else "без username"
+        for uid, username in read_users.items():
+            name = f"@{username}" if username else "без username"
             text += f"• {name} (<code>{uid}</code>)\n"
 
     return text
 
-async def send_notice(shift_name):
+# ---------- ОТПРАВКА УВЕДОМЛЕНИЯ ----------
+async def send_notice(shift_name: str):
     global read_users, current_shift
     read_users = {}
     current_shift = shift_name
@@ -49,7 +58,8 @@ async def send_notice(shift_name):
         reply_markup=keyboard()
     )
 
-@dp.callback_query(F.data == "read")
+# ---------- НАЖАТИЕ КНОПКИ ----------
+@dp.callback_query(F.data == "read_notice")
 async def read_callback(call: CallbackQuery):
     user = call.from_user
 
@@ -60,13 +70,19 @@ async def read_callback(call: CallbackQuery):
             reply_markup=keyboard()
         )
 
-    await call.answer("Отметка принята")
+    await call.answer("Отмечено 👍")
 
+# ---------- КОМАНДА /test ----------
+@dp.message(Command("test"))
+async def test_command(message):
+    await send_notice("ТЕСТОВАЯ СМЕНА")
+
+# ---------- ЗАПУСК ----------
 async def main():
-    scheduler = AsyncIOScheduler(timezone=timezone("Europe/Moscow"))
+    scheduler = AsyncIOScheduler(timezone=ZoneInfo("Europe/Moscow"))
 
     scheduler.add_job(send_notice, "cron", hour=4, minute=0, args=["Ночная (04:00)"])
-    scheduler.add_job(send_notice, "cron", hour=10, minute=0, args=["Дневная (11:27)"])
+    scheduler.add_job(send_notice, "cron", hour=10, minute=0, args=["Дневная (10:00)"])
 
     scheduler.start()
     await dp.start_polling(bot)
